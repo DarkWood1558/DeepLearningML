@@ -74,7 +74,7 @@ public class DL4JImageTemplate {
                 .layer(new DenseLayer.Builder().nOut(256) // Dichte Schicht
                         .activation(Activation.RELU)
                         .build())
-                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) // Ausgabeschicht
+                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) // Ausgabeschicht, negative log-likelihood Verlustfunktion, um die Vorhersagen zu optimieren
                         .nOut(trainReader.getLabels().size())
                         .activation(Activation.SOFTMAX)
                         .build())
