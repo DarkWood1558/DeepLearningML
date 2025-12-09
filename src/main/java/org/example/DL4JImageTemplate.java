@@ -32,7 +32,7 @@ public class DL4JImageTemplate {
     static int width = 64; // Breite der Bilder
     static int channels = 3; // Anzahl der Farbkanäle (RGB)
     static int batchSize = 32; // Anzahl der Bilder pro Batch
-    static int epochs = 5; // Anzahl der Trainings-Epochen
+    static int epochs = 1; // Anzahl der Trainings-Epochen
 
     static void main() throws Exception {
 
@@ -40,8 +40,8 @@ public class DL4JImageTemplate {
         File trainData = new File("dataset/train"); // Pfad zu den Trainingsdaten
         File testData = new File("dataset/test"); // Pfad zu den Testdaten
 
-        FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS); // Aufteilen der Trainingsdaten
-        FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS); // Aufteilen der Testdaten
+        FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS, true); // Aufteilen der Trainingsdaten
+        FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS, true); // Aufteilen der Testdaten
 
         ParentPathLabelGenerator labels = new ParentPathLabelGenerator(); // Generierung von Labels basierend auf dem Pfad
 
@@ -97,7 +97,8 @@ public class DL4JImageTemplate {
         ImageRecordReader testReader = new ImageRecordReader(height, width, channels, labels); // Reader für Testdaten
         testReader.initialize(testSplit); // Initialisierung mit den Testdaten
 
-        DataSetIterator testIter = new RecordReaderDataSetIterator(testReader, batchSize); // Iterator für Testdaten
+        DataSetIterator testIter = new RecordReaderDataSetIterator(
+                testReader, batchSize, 1, trainReader.getLabels().size()); // Iterator für Testdaten
         testIter.setPreProcessor(scaler); // Anwenden des Scalers auf den Test-Iterator
 
         Evaluation eval = model.evaluate(testIter); // Bewertung des Modells
@@ -105,7 +106,7 @@ public class DL4JImageTemplate {
 
         // ---- 6. Beispielvorhersage ----
         System.out.println("Vorhersage wird durchgeführt...");
-        File imgFile = new File("example.jpg"); // Beispielbild für die Vorhersage
+        File imgFile = new File("X0Y0.bmp"); // Beispielbild für die Vorhersage
         if (imgFile.exists()) {
             NativeImageLoader loader = new NativeImageLoader(height, width, channels); // Loader für das Bild
             INDArray image = loader.asMatrix(imgFile); // Bild in Matrix umwandeln
