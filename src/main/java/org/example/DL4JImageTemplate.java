@@ -1,6 +1,6 @@
-package org.example;// DeepLearning4j Image Recognition Template Project
-// Author: Maurice Müller
-// This file provides a clean starting point for training and using a CNN with DL4J.
+package org.example; // DeepLearning4j Image Recognition Template Project
+
+
 
 import org.datavec.api.io.labels.ParentPathLabelGenerator;
 import org.datavec.api.split.FileSplit;
@@ -27,95 +27,94 @@ import java.io.File;
 
 public class DL4JImageTemplate {
 
-    // Basic image parameters
-    static int height = 64;
-    static int width = 64;
-    static int channels = 3;
-    static int batchSize = 32;
-    static int epochs = 5;
+    // Grundlegende Bildparameter
+    static int height = 64; // Höhe der Bilder
+    static int width = 64; // Breite der Bilder
+    static int channels = 3; // Anzahl der Farbkanäle (RGB)
+    static int batchSize = 32; // Anzahl der Bilder pro Batch
+    static int epochs = 5; // Anzahl der Trainings-Epochen
 
     static void main() throws Exception {
 
-        // ---- 1. Dataset Paths ----
-        File trainData = new File("dataset/train");
-        File testData = new File("dataset/test");
+        // ---- 1. Dataset-Pfade ----
+        File trainData = new File("dataset/train"); // Pfad zu den Trainingsdaten
+        File testData = new File("dataset/test"); // Pfad zu den Testdaten
 
-        FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS);
-        FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS);
+        FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS); // Aufteilen der Trainingsdaten
+        FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS); // Aufteilen der Testdaten
 
-        ParentPathLabelGenerator labels = new ParentPathLabelGenerator();
+        ParentPathLabelGenerator labels = new ParentPathLabelGenerator(); // Generierung von Labels basierend auf dem Pfad
 
         // ---- 2. Image Record Reader ----
-        ImageRecordReader trainReader = new ImageRecordReader(height, width, channels, labels);
-        trainReader.initialize(trainSplit);
+        ImageRecordReader trainReader = new ImageRecordReader(height, width, channels, labels); // Initialisierung des Readers
+        trainReader.initialize(trainSplit); // Initialisierung mit den Trainingsdaten
 
         DataSetIterator trainIter = new RecordReaderDataSetIterator(
-                trainReader, batchSize, 1, trainReader.getLabels().size());
+                trainReader, batchSize, 1, trainReader.getLabels().size()); // Erstellen des DataSetIterators
 
-        DataNormalization scaler = new ImagePreProcessingScaler(0, 1);
-        scaler.fit(trainIter);
-        trainIter.setPreProcessor(scaler);
+        DataNormalization scaler = new ImagePreProcessingScaler(0, 1); // Normalisierung der Bilddaten
+        scaler.fit(trainIter); // Anpassen des Scalers an die Trainingsdaten
+        trainIter.setPreProcessor(scaler); // Anwenden des Scalers auf den Iterator
 
-        // ---- 3. Define CNN Model ----
+        // ---- 3. CNN-Modell-Definition ----
         MultiLayerConfiguration config = new NeuralNetConfiguration.Builder()
-                .seed(123)
-                .updater(new Adam(1e-3))
+                .seed(123) // Zufallszahl für Reproduzierbarkeit
+                .updater(new Adam(1e-3)) // Optimierer
                 .list()
-                .layer(new ConvolutionLayer.Builder(5,5)
+                .layer(new ConvolutionLayer.Builder(5,5) // Faltungsschicht
                         .stride(1,1)
                         .nIn(channels)
                         .nOut(32)
                         .activation(Activation.RELU)
                         .build())
-                .layer(new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+                .layer(new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX) // Max-Pooling-Schicht
                         .kernelSize(2,2)
                         .stride(2,2)
                         .build())
-                .layer(new DenseLayer.Builder().nOut(256)
+                .layer(new DenseLayer.Builder().nOut(256) // Dichte Schicht
                         .activation(Activation.RELU)
                         .build())
-                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) // Ausgabeschicht
                         .nOut(trainReader.getLabels().size())
                         .activation(Activation.SOFTMAX)
                         .build())
-                .setInputType(InputType.convolutional(height, width, channels))
+                .setInputType(InputType.convolutional(height, width, channels)) // Eingabetyp definieren
                 .build();
 
-        MultiLayerNetwork model = new MultiLayerNetwork(config);
-        model.init();
-        model.setListeners(new ScoreIterationListener(10));
+        MultiLayerNetwork model = new MultiLayerNetwork(config); // Modell erstellen
+        model.init(); // Modell initialisieren
+        model.setListeners(new ScoreIterationListener(10)); // Listener für die Ausgabe der Scores
 
-        // ---- 4. Train Model ----
-        System.out.println("Training model...");
+        // ---- 4. Modelltraining ----
+        System.out.println("Modell wird trainiert...");
         for (int i = 0; i < epochs; i++) {
-            model.fit(trainIter);
-            System.out.println("Epoch " + (i+1) + " completed.");
+            model.fit(trainIter); // Modell anpassen
+            System.out.println("Epoche " + (i+1) + " abgeschlossen.");
         }
 
-        // ---- 5. Evaluation ----
-        System.out.println("Evaluating model...");
-        ImageRecordReader testReader = new ImageRecordReader(height, width, channels, labels);
-        testReader.initialize(testSplit);
+        // ---- 5. Bewertung ----
+        System.out.println("Modell wird bewertet...");
+        ImageRecordReader testReader = new ImageRecordReader(height, width, channels, labels); // Reader für Testdaten
+        testReader.initialize(testSplit); // Initialisierung mit den Testdaten
 
-        DataSetIterator testIter = new RecordReaderDataSetIterator(testReader, batchSize);
-        testIter.setPreProcessor(scaler);
+        DataSetIterator testIter = new RecordReaderDataSetIterator(testReader, batchSize); // Iterator für Testdaten
+        testIter.setPreProcessor(scaler); // Anwenden des Scalers auf den Test-Iterator
 
-        Evaluation eval = model.evaluate(testIter);
-        System.out.println(eval.stats());
+        Evaluation eval = model.evaluate(testIter); // Bewertung des Modells
+        System.out.println(eval.stats()); // Ausgabe der Bewertungsergebnisse
 
-        // ---- 6. Example Prediction ----
-        System.out.println("Running prediction...");
-        File imgFile = new File("example.jpg");
+        // ---- 6. Beispielvorhersage ----
+        System.out.println("Vorhersage wird durchgeführt...");
+        File imgFile = new File("example.jpg"); // Beispielbild für die Vorhersage
         if (imgFile.exists()) {
-            NativeImageLoader loader = new NativeImageLoader(height, width, channels);
-            INDArray image = loader.asMatrix(imgFile);
-            scaler.transform(image);
-            INDArray output = model.output(image);
-            int predicted = Nd4j.argMax(output, 1).getInt(0);
-            System.out.println("Predicted class: " + trainReader.getLabels().get(predicted));
+            NativeImageLoader loader = new NativeImageLoader(height, width, channels); // Loader für das Bild
+            INDArray image = loader.asMatrix(imgFile); // Bild in Matrix umwandeln
+            scaler.transform(image); // Normalisierung des Bildes
+            INDArray output = model.output(image); // Vorhersage des Modells
+            int predicted = Nd4j.argMax(output, 1).getInt(0); // Vorhergesagte Klasse ermitteln
+            System.out.println("Vorhergesagte Klasse: " + trainReader.getLabels().get(predicted)); // Ausgabe der Vorhersage
         } else {
-            System.out.println("No example.jpg found for prediction test.");
+            System.out.println("Beispielbild example.jpg nicht gefunden.");
         }
-
     }
 }
