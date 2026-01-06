@@ -40,8 +40,8 @@ public class DL4JImageTemplate {
         File trainData = new File("dataset/train"); // Pfad zu den Trainingsdaten
         File testData = new File("dataset/test"); // Pfad zu den Testdaten
 
-        FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS, true); // Aufteilen der Trainingsdaten
-        FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS, true); // Aufteilen der Testdaten
+        FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS); // Aufteilen der Trainingsdaten
+        FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS); // Aufteilen der Testdaten
 
         ParentPathLabelGenerator labels = new ParentPathLabelGenerator(); // Generierung von Labels basierend auf dem Pfad
 
@@ -106,7 +106,7 @@ public class DL4JImageTemplate {
 
         // ---- 6. Beispielvorhersage ----
         System.out.println("Vorhersage wird durchgeführt...");
-        File imgFile = new File("X0Y0.bmp"); // Beispielbild für die Vorhersage
+        File imgFile = new File("/Users/mauricemuller/IdeaProjects/DeepLearning/dataset/train/102 - Vorfahrt von rechts/X0Y0+1-1vvr.bmp"); // Beispielbild für die Vorhersage
         if (imgFile.exists()) {
             NativeImageLoader loader = new NativeImageLoader(height, width, channels); // Loader für das Bild
             INDArray image = loader.asMatrix(imgFile); // Bild in Matrix umwandeln
